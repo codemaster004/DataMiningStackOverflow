@@ -5,13 +5,15 @@ import math
 
 
 class MDN(nn.Module):
-	def __init__(self, input_dim, num_mixtures=3, hidden_layers=10, hidden_units=32):
+	def __init__(self, input_dim, num_mixtures=3, hidden_layers=10, hidden_units=32, dropout=0.1):
 		super(MDN, self).__init__()
 		
 		self.hidden_layers = nn.ModuleList()
 		self.hidden_layers.append(nn.Linear(input_dim, hidden_units))
 		for _ in range(hidden_layers - 1):
 			self.hidden_layers.append(nn.Linear(hidden_units, hidden_units))
+		
+		self.dropout = nn.Dropout(dropout)
 		
 		self.num_mixtures = num_mixtures
 		self.pi_layer = nn.Linear(hidden_units, num_mixtures)
@@ -21,6 +23,7 @@ class MDN(nn.Module):
 	def forward(self, x):
 		for layer in self.hidden_layers:
 			x = F.relu(layer(x))
+			x = self.dropout(x)
 		
 		pi = F.softmax(self.pi_layer(x), dim=1)
 		mu = self.mu_layer(x)
